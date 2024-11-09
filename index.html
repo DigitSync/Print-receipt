@@ -80,6 +80,13 @@
             color: #555;
             margin-top: 10px;
         }
+        .website-link {
+            font-size: 12px;
+            color: #007bff;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+        }
         @media print {
             body {
                 margin: 0;
@@ -241,6 +248,7 @@
             receiptContent += `<div style="margin-top: 10px; font-weight: bold; text-align: center;">Thank You for Shopping!</div>`;
             receiptContent += `<div class="barcode"><svg id="barcode"></svg></div>`; // Placeholder for barcode
             receiptContent += `<div class="compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
+            receiptContent += `<div style="text-align: center; font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`;
 
             document.getElementById('receipt').innerHTML = receiptContent;
             document.getElementById('receipt').style.display = 'block'; // Show the receipt
