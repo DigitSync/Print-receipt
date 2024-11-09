@@ -257,8 +257,9 @@
         }
 
         function generateBarcode() {
-            const currentTime = new Date().toLocaleTimeString(); // Get current time
-            JsBarcode("#barcode", currentTime, {
+            const currentTime = new Date();
+            const timeString = currentTime.toLocaleTimeString('it-IT').replace(/:/g, '');
+            JsBarcode("#barcode", timeString, {
                 format: "CODE39", // Barcode format
                 lineColor: "#000",
                 width: 2,
