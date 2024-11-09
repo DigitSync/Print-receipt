@@ -39,6 +39,11 @@
         #reset-button {
             font-size: 14px; /* Smaller font size for reset button */
         }
+        #logout-button {
+            font-size: 12px; /* Smaller font size for logout button */
+            background-color: #dc3545; /* Red color for logout */
+            margin-top: 20px;
+        }
         #receipt {
             text-align: left;
             margin-top: 20px;
@@ -118,6 +123,7 @@
         <input type="text" id="customer-name" placeholder="Customer Name" required>
         <input type="text" id="customer-phone" placeholder="Customer Phone Number" required>
         <button onclick="submitCustomerInfo()">Submit Customer Info</button>
+        <button id="logout-button" onclick="logout()">Logout</button>
     </div>
 
     <div id="item-entry-page" class="page" style="display: none;">
@@ -274,6 +280,19 @@
             document.getElementById('item-price').value = '';
             document.getElementById('customer-info-page').style.display = 'block';
             document.getElementById('item-entry-page').style.display = 'none';
+        }
+
+        function logout() {
+            // Clear localStorage
+            localStorage.removeItem('shopName');
+            localStorage.removeItem('contactNumber');
+            localStorage.removeItem('address');
+            localStorage.removeItem('ownerName');
+            
+            // Redirect to login page
+            document.getElementById('customer-info-page').style.display = 'none';
+            document.getElementById('item-entry-page').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
         }
     </script>
 
