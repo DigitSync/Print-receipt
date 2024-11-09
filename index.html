@@ -102,9 +102,9 @@
     <!-- JsBarcode library -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
 </head>
-<body>
+<body onload="loadShopDetails()">
 
-    <div id="login-page" class="page">
+    <div id="login-page" class="page" style="display: none;">
         <h1>Shop Login</h1>
         <input type="text" id="shop-name" placeholder="Enter Shop Name" required>
         <input type="text" id="contact-number" placeholder="Contact Number">
@@ -141,6 +141,25 @@
         let customerName = '';
         let customerPhone = '';
 
+        function loadShopDetails() {
+            const savedShopName = localStorage.getItem('shopName');
+            const savedContactNumber = localStorage.getItem('contactNumber');
+            const savedAddress = localStorage.getItem('address');
+            const savedOwnerName = localStorage.getItem('ownerName');
+
+            if (savedShopName && savedContactNumber && savedAddress && savedOwnerName) {
+                shopName = savedShopName;
+                contactNumber = savedContactNumber;
+                address = savedAddress;
+                ownerName = savedOwnerName;
+
+                document.getElementById('shop-title').innerText = shopName;
+                document.getElementById('customer-info-page').style.display = 'block';
+            } else {
+                document.getElementById('login-page').style.display = 'block';
+            }
+        }
+
         function login() {
             shopName = document.getElementById('shop-name').value;
             contactNumber = document.getElementById('contact-number').value;
@@ -151,6 +170,12 @@
                 alert("Shop Name is required!");
                 return;
             }
+
+            // Save shop details to localStorage
+            localStorage.setItem('shopName', shopName);
+            localStorage.setItem('contactNumber', contactNumber);
+            localStorage.setItem('address', address);
+            localStorage.setItem('ownerName', ownerName);
 
             document.getElementById('shop-title').innerText = shopName;
             document.getElementById('login-page').style.display = 'none';
