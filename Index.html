@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Receipt Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+        .page {
+            margin: 20px auto;
+            max-width: 400px;
+        }
+        input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 80%;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #28a745; /* Green color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+        #reset-button {
+            font-size: 14px; /* Smaller font size for reset button */
+        }
+        #receipt {
+            text-align: left;
+            margin-top: 20px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff; /* Blue color for header */
+            color: white;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        #shop-title {
+            font-size: 24px; /* Larger font size for shop name */
+            margin-bottom: 20px;
+        }
+        .barcode {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .compact-info {
+            font-size: 12px;
+            color: #555;
+            margin-top: 10px;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 20px;
+                font-size: 14px;
+                color: #333;
+            }
+            #receipt {
+                display: block;
+                margin: 0;
+            }
+            table {
+                border: none;
+            }
+            th {
+                border: 1px solid #333;
+                background-color: #007bff;
+                color: white;
+            }
+            td {
+                border: 1px solid #333;
+            }
+        }
+    </style>
+    <!-- JsBarcode library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+
+    <div id="login-page" class="page">
+        <h1>Shop Login</h1>
+        <input type="text" id="shop-name" placeholder="Enter Shop Name" required>
+        <input type="text" id="contact-number" placeholder="Contact Number">
+        <input type="text" id="address" placeholder="Address">
+        <input type="text" id="owner-name" placeholder="Owner/Manager Name">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="customer-info-page" class="page" style="display: none;">
+        <h1 id="shop-title"></h1>
+        <input type="text" id="customer-name" placeholder="Customer Name" required>
+        <input type="text" id="customer-phone" placeholder="Customer Phone Number" required>
+        <button onclick="submitCustomerInfo()">Submit Customer Info</button>
+    </div>
+
+    <div id="item-entry-page" class="page" style="display: none;">
+        <h2>Enter Item Details</h2>
+        <input type="text" id="item-name" placeholder="Item Name" required>
+        <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
+        <button onclick="addItem()">Add Item</button>
+        <button onclick="printReceipt()">Print Receipt</button>
+        <button id="reset-button" onclick="resetItems()">Reset for New Sale</button>
+
+        <h2>Receipt:</h2>
+        <div id="receipt"></div>
+    </div>
+
+    <script>
+        let items = [];
+        let shopName = '';
+        let contactNumber = '';
+        let address = '';
+        let ownerName = '';
+        let customerName = '';
+        let customerPhone = '';
+
+        function login() {
+            shopName = document.getElementById('shop-name').value;
+            contactNumber = document.getElementById('contact-number').value;
+            address = document.getElementById('address').value;
+            ownerName = document.getElementById('owner-name').value;
+
+            if (!shopName) {
+                alert("Shop Name is required!");
+                return;
+            }
+
+            document.getElementById('shop-title').innerText = shopName;
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('customer-info-page').style.display = 'block';
+        }
+
+        function submitCustomerInfo() {
+            customerName = document.getElementById('customer-name').value;
+            customerPhone = document.getElementById('customer-phone').value;
+
+            if (!customerName || !customerPhone) {
+                alert("Customer Name and Phone Number are required!");
+                return;
+            }
+
+            document.getElementById('customer-info-page').style.display = 'none';
+            document.getElementById('item-entry-page').style.display = 'block';
+        }
+
+        function addItem() {
+            const itemName = document.getElementById('item-name').value;
+            const itemPrice = parseFloat(document.getElementById('item-price').value);
+            
+            if (itemName && !isNaN(itemPrice)) {
+                items.push({ name: itemName, price: itemPrice });
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-price').value = '';
+                updateReceipt();
+            } else {
+                alert("Please enter valid item name and price.");
+            }
+        }
+
+        function updateReceipt() {
+            const currentDateTime = new Date().toLocaleString(); // Get current date and time
+            let receiptContent = `<div style="text-align: center;"><strong style="font-size: 24px;">CASH RECEIPT</strong></div><br>`;
+            receiptContent += `<strong>Shop: ${shopName}</strong><br>`;
+            receiptContent += `Customer: <strong>${customerName}</strong><br>`;
+            receiptContent += `Mobile: <strong>${customerPhone}</strong><br>`;
+            receiptContent += `Date & Time: ${currentDateTime}<br><br>`;
+            receiptContent += `<table><tr><th>Item</th><th>Price (₹)</th></tr>`;
+            let total = 0;
+
+            items.forEach(item => {
+                receiptContent += `<tr><td>${item.name}</td><td>₹${item.price.toFixed(2)}</td></tr>`;
+                total += item.price; // Calculate total price
+            });
+
+            const gst = total * 0.1; // Calculate 10% GST
+            const discount = gst; // Discount is equal to GST
+            const finalTotal = total + gst - discount; // Calculate final total after discount
+
+            receiptContent += `</table><hr>Subtotal: ₹${total.toFixed(2)}<br>`;
+            receiptContent += `GST (10%): ₹${gst.toFixed(2)}<br>`;
+            receiptContent += `Discount: ₹${discount.toFixed(2)}<br>`;
+            receiptContent += `<strong style="font-size: 18px; color: black;">Total: ₹${finalTotal.toFixed(2)}</strong><br>`;
+            receiptContent += `<div style="margin-top: 10px; font-weight: bold; text-align: center;">Thank You for Shopping!</div>`;
+            receiptContent += `<div class="barcode"><svg id="barcode"></svg></div>`; // Placeholder for barcode
+            receiptContent += `<div class="compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
+
+            document.getElementById('receipt').innerHTML = receiptContent;
+            document.getElementById('receipt').style.display = 'block'; // Show the receipt
+
+            generateBarcode(); // Generate the barcode
+        }
+
+        function generateBarcode() {
+            const currentTime = new Date().toLocaleTimeString(); // Get current time
+            JsBarcode("#barcode", currentTime, {
+                format: "CODE39", // Barcode format
+                lineColor: "#000",
+                width: 2,
+                height: 50,
+                displayValue: true
+            });
+        }
+
+        function printReceipt() {
+            const printWindow = window.open('', '', 'height=600,width=400');
+            printWindow.document.write('<html><head><title>Receipt</title><style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; margin: 0; padding: 20px; text-align: left; }');
+            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; }');
+            printWindow.document.write('th, td { border: 1px solid #333; padding: 8px; text-align: left; }');
+            printWindow.document.write('th { background-color: #007bff; color: white; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write(document.getElementById('receipt').innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function resetItems() {
+            items = [];
+            document.getElementById('receipt').innerHTML = '';
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-price').value = '';
+            document.getElementById('customer-info-page').style.display = 'block';
+            document.getElementById('item-entry-page').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
