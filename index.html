@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +27,7 @@
         button {
             padding: 10px;
             font-size: 16px;
-            background-color: #28a745; /* Green color */
+            background-color: #28a745; /* Green color for other buttons */
             color: white;
             border: none;
             border-radius: 5px;
@@ -37,7 +38,14 @@
             background-color: #218838; /* Darker green on hover */
         }
         #reset-button {
-            font-size: 14px; /* Smaller font size for reset button */
+            background-color: #dc3545; /* Red color */
+            color: white; /* Text color */
+            padding: 8px; /* Smaller padding */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            margin: 5px 0; /* Margin around the button */
+            font-size: 14px; /* Smaller font size */
         }
         #logout-button {
             font-size: 12px; /* Smaller font size for logout button */
@@ -113,6 +121,7 @@
     </style>
     <!-- JsBarcode library -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body onload="loadShopDetails()">
 
@@ -139,6 +148,7 @@
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
         <button onclick="addItem()">Add Item</button>
         <button onclick="printReceipt()">Print Receipt</button>
+        <button onclick="shareReceipt()">Share Receipt</button>
         <button id="reset-button" onclick="resetItems()">Reset for New Sale</button>
 
         <h2>Receipt:</h2>
@@ -224,12 +234,12 @@
 
         function updateReceipt() {
             const currentDateTime = new Date().toLocaleString(); // Get current date and time
-            let receiptContent = `<div style="text-align: center;"><strong style="font-size: 24px;">CASH RECEIPT</strong></div><br>`;
+            let receiptContent = `<div style="text-align: center; padding: 20px; margin: 10px;"><strong style="font-size: 24px;">CASH RECEIPT</strong></div><br>`;
             receiptContent += `<strong>Shop: ${shopName}</strong><br>`;
             receiptContent += `Customer: <strong>${customerName}</strong><br>`;
             receiptContent += `Mobile: <strong>${customerPhone}</strong><br>`;
             receiptContent += `Date & Time: ${currentDateTime}<br><br>`;
-            receiptContent += `<table><tr><th>Item</th><th>Price (₹)</th></tr>`;
+            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Price (₹)</th></tr>`;
             let total = 0;
 
             items.forEach(item => {
@@ -280,6 +290,33 @@
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
+        }
+
+        function shareReceipt() {
+            html2canvas(document.getElementById('receipt'), { 
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                onclone: (doc) => {
+                    const receipt = doc.getElementById('receipt');
+                    receipt.style.padding = '20px'; // Add padding for the receipt image
+                    receipt.style.margin = '10px'; // Add margin for the receipt image
+                }
+            }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const file = new File([blob], "receipt.png", { type: "image/png" });
+                    const shareData = {
+                        title: 'Receipt',
+                        text: 'Here is your receipt!',
+                        files: [file]
+                    };
+                    navigator.share(shareData).then(() => {
+                        console.log('Receipt shared successfully!');
+                    }).catch(err => {
+                        console.error('Error while sharing:', err);
+                    });
+                });
+            });
         }
 
         function resetItems() {
