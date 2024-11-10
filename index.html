@@ -16,6 +16,7 @@
         .page {
             margin: 20px auto;
             max-width: 400px;
+            display: none;
         }
         input {
             display: block;
@@ -27,7 +28,7 @@
         button {
             padding: 10px;
             font-size: 16px;
-            background-color: #28a745; /* Green color for other buttons */
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
@@ -35,21 +36,21 @@
             margin: 5px 0;
         }
         button:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
         }
         #reset-button {
-            background-color: #dc3545; /* Red color */
-            color: white; /* Text color */
-            padding: 8px; /* Smaller padding */
-            border: none; /* No border */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Pointer cursor on hover */
-            margin: 5px 0; /* Margin around the button */
-            font-size: 14px; /* Smaller font size */
+            background-color: #dc3545;
+            color: white;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-size: 14px;
         }
         #logout-button {
-            font-size: 12px; /* Smaller font size for logout button */
-            background-color: #dc3545; /* Red color for logout */
+            font-size: 12px;
+            background-color: #dc3545;
             margin-top: 20px;
         }
         #receipt {
@@ -68,7 +69,7 @@
             text-align: left;
         }
         th {
-            background-color: #007bff; /* Blue color for header */
+            background-color: #007bff;
             color: white;
         }
         .footer {
@@ -76,7 +77,7 @@
             font-size: 12px;
         }
         #shop-title {
-            font-size: 24px; /* Larger font size for shop name */
+            font-size: 24px;
             margin-bottom: 20px;
         }
         .barcode {
@@ -87,13 +88,6 @@
             font-size: 12px;
             color: #555;
             margin-top: 10px;
-        }
-        .website-link {
-            font-size: 12px;
-            color: #007bff;
-            text-decoration: none;
-            margin-top: 10px;
-            display: inline-block;
         }
         @media print {
             body {
@@ -119,30 +113,34 @@
             }
         }
     </style>
-    <!-- JsBarcode library -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body onload="loadShopDetails()">
 
-    <div id="login-page" class="page" style="display: none;">
+    <div id="login-page" class="page">
         <h1>Shop Login</h1>
+        <select id="existing-shops" onchange="selectShop()">
+            <option value="">Select Existing Shop</option>
+        </select>
         <input type="text" id="shop-name" placeholder="Enter Shop Name" required>
         <input type="text" id="contact-number" placeholder="Contact Number">
         <input type="text" id="address" placeholder="Address">
         <input type="text" id="owner-name" placeholder="Owner/Manager Name">
         <button onclick="login()">Login</button>
+        <button onclick="createNewShop()">Create New Shop</button>
     </div>
 
-    <div id="customer-info-page" class="page" style="display: none;">
+    <div id="customer-info-page" class="page">
         <h1 id="shop-title"></h1>
         <input type="text" id="customer-name" placeholder="Customer Name" required>
         <input type="text" id="customer-phone" placeholder="Customer Phone Number" required>
         <button onclick="submitCustomerInfo()">Submit Customer Info</button>
-        <button id="logout-button" onclick="logout()">Logout</button>
+        <button id="logout-button" onclick="confirmLogout()">Logout</button>
+        <button onclick="showHistory()">View Sales History</button>
     </div>
 
-    <div id="item-entry-page" class="page" style="display: none;">
+    <div id="item-entry-page" class="page">
         <h2>Enter Item Details</h2>
         <input type="text" id="item-name" placeholder="Item Name" required>
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
@@ -155,6 +153,13 @@
         <div id="receipt"></div>
     </div>
 
+    <div id="history-page" class="page">
+        <h2>Sales History</h2>
+        <div id="history"></div>
+        <button onclick="exportToCSV()">Export to CSV</button>
+        <button onclick="goBack()">Back</button>
+    </div>
+
     <script>
         let items = [];
         let shopName = '';
@@ -165,22 +170,49 @@
         let customerPhone = '';
 
         function loadShopDetails() {
-            const savedShopName = localStorage.getItem('shopName');
-            const savedContactNumber = localStorage.getItem('contactNumber');
-            const savedAddress = localStorage.getItem('address');
-            const savedOwnerName = localStorage.getItem('ownerName');
+            let shops = JSON.parse(localStorage.getItem('shops')) || [];
+            const shopSelect = document.getElementById('existing-shops');
+            shopSelect.innerHTML = '<option value="">Select Existing Shop</option>';
+            shops.forEach((shop, index) => {
+                let option = document.createElement('option');
+                option.value = index;
+                option.text = shop.shopName;
+                shopSelect.add(option);
+            });
 
-            if (savedShopName && savedContactNumber && savedAddress && savedOwnerName) {
-                shopName = savedShopName;
-                contactNumber = savedContactNumber;
-                address = savedAddress;
-                ownerName = savedOwnerName;
-
-                document.getElementById('shop-title').innerText = shopName;
-                document.getElementById('customer-info-page').style.display = 'block';
+            const savedShopIndex = localStorage.getItem('currentShopIndex');
+            if (savedShopIndex !== null && shops[savedShopIndex]) {
+                applyShopDetails(savedShopIndex, shops);
             } else {
                 document.getElementById('login-page').style.display = 'block';
             }
+        }
+
+        function applyShopDetails(index, shops) {
+            shopName = shops[index].shopName;
+            contactNumber = shops[index].contactNumber;
+            address = shops[index].address;
+            ownerName = shops[index].ownerName;
+
+            document.getElementById('shop-title').innerText = shopName;
+            document.getElementById('customer-info-page').style.display = 'block';
+            document.getElementById('login-page').style.display = 'none';
+        }
+
+        function selectShop() {
+            const shopIndex = document.getElementById('existing-shops').value;
+            if (shopIndex !== "") {
+                localStorage.setItem('currentShopIndex', shopIndex);
+                let shops = JSON.parse(localStorage.getItem('shops')) || [];
+                applyShopDetails(shopIndex, shops);
+            }
+        }
+
+        function createNewShop() {
+            document.getElementById('shop-name').value = '';
+            document.getElementById('contact-number').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('owner-name').value = '';
         }
 
         function login() {
@@ -194,15 +226,13 @@
                 return;
             }
 
-            // Save shop details to localStorage
-            localStorage.setItem('shopName', shopName);
-            localStorage.setItem('contactNumber', contactNumber);
-            localStorage.setItem('address', address);
-            localStorage.setItem('ownerName', ownerName);
+            let shops = JSON.parse(localStorage.getItem('shops')) || [];
+            const newShop = { shopName, contactNumber, address, ownerName };
+            shops.push(newShop);
+            localStorage.setItem('shops', JSON.stringify(shops));
+            localStorage.setItem('currentShopIndex', shops.length - 1);
 
-            document.getElementById('shop-title').innerText = shopName;
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('customer-info-page').style.display = 'block';
+            applyShopDetails(shops.length - 1, shops);
         }
 
         function submitCustomerInfo() {
@@ -233,8 +263,8 @@
         }
 
         function updateReceipt() {
-            const currentDateTime = new Date().toLocaleString(); // Get current date and time
-            let receiptContent = `<div style="text-align: center; padding: 20px; margin: 10px;"><strong style="font-size: 24px;">CASH RECEIPT</strong></div><br>`;
+            const currentDateTime = new Date().toLocaleString();
+            let receiptContent = `<div style="text-align: center; padding: 20px; margin: 10px; font-family: 'Courier New', Courier, monospace; font-size: 30px; font-weight: bold;"><strong>CASH RECEIPT</strong></div><br>`;
             receiptContent += `<strong>Shop: ${shopName}</strong><br>`;
             receiptContent += `Customer: <strong>${customerName}</strong><br>`;
             receiptContent += `Mobile: <strong>${customerPhone}</strong><br>`;
@@ -244,33 +274,38 @@
 
             items.forEach(item => {
                 receiptContent += `<tr><td>${item.name}</td><td>₹${item.price.toFixed(2)}</td></tr>`;
-                total += item.price; // Calculate total price
+                total += item.price;
             });
 
-            const gst = total * 0.1; // Calculate 10% GST
-            const discount = gst; // Discount is equal to GST
-            const finalTotal = total + gst - discount; // Calculate final total after discount
+            const gst = total * 0.1;
+            const discount = gst;
+            const finalTotal = total + gst - discount;
 
             receiptContent += `</table><hr>Subtotal: ₹${total.toFixed(2)}<br>`;
             receiptContent += `GST (10%): ₹${gst.toFixed(2)}<br>`;
             receiptContent += `Discount: ₹${discount.toFixed(2)}<br>`;
             receiptContent += `<strong style="font-size: 18px; color: black;">Total: ₹${finalTotal.toFixed(2)}</strong><br>`;
             receiptContent += `<div style="margin-top: 10px; font-weight: bold; text-align: center;">Thank You for Shopping!</div>`;
-            receiptContent += `<div class="barcode"><svg id="barcode"></svg></div>`; // Placeholder for barcode
+            receiptContent += `<div class="barcode"><svg id="barcode"></svg></div>`;
             receiptContent += `<div class="compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
             receiptContent += `<div style="text-align: center; font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`;
 
             document.getElementById('receipt').innerHTML = receiptContent;
-            document.getElementById('receipt').style.display = 'block'; // Show the receipt
+            document.getElementById('receipt').style.display = 'block';
 
-            generateBarcode(); // Generate the barcode
+            generateBarcode();
         }
 
         function generateBarcode() {
             const currentTime = new Date();
-            const timeString = currentTime.toLocaleTimeString('it-IT').replace(/:/g, '');
-            JsBarcode("#barcode", timeString, {
-                format: "CODE39", // Barcode format
+            const timeString = currentTime.toLocaleTimeString('it-IT').replace(/:/g, '').slice(0, 6);
+            const days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+            const dayCode = days[currentTime.getDay()];
+
+            const barcodeData = `${dayCode}${timeString}`;
+            
+            JsBarcode("#barcode", barcodeData, {
+                format: "CODE39",
                 lineColor: "#000",
                 width: 2,
                 height: 50,
@@ -287,7 +322,6 @@
             printWindow.document.write('th { background-color: #007bff; color: white; }');
             printWindow.document.write('</style></head><body>');
             printWindow.document.write(document.getElementById('receipt').innerHTML);
-            printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
         }
@@ -299,8 +333,8 @@
                 useCORS: true,
                 onclone: (doc) => {
                     const receipt = doc.getElementById('receipt');
-                    receipt.style.padding = '20px'; // Add padding for the receipt image
-                    receipt.style.margin = '10px'; // Add margin for the receipt image
+                    receipt.style.padding = '20px';
+                    receipt.style.margin = '10px';
                 }
             }).then(canvas => {
                 canvas.toBlob(blob => {
@@ -320,6 +354,7 @@
         }
 
         function resetItems() {
+            saveReceipt();
             items = [];
             document.getElementById('receipt').innerHTML = '';
             document.getElementById('item-name').value = '';
@@ -328,17 +363,105 @@
             document.getElementById('item-entry-page').style.display = 'none';
         }
 
-        function logout() {
-            // Clear localStorage
-            localStorage.removeItem('shopName');
-            localStorage.removeItem('contactNumber');
-            localStorage.removeItem('address');
-            localStorage.removeItem('ownerName');
-            
-            // Redirect to login page
+        function saveReceipt() {
+            const receiptData = {
+                items: items,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                date: new Date().toLocaleString()
+            };
+
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            receipts.push(receiptData);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+        }
+
+        function loadHistory() {
+            const historyContainer = document.getElementById('history');
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            historyContainer.innerHTML = receipts.map((receipt, index) => {
+                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+                return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
+                    <strong>Receipt #${index + 1}</strong><br>
+                    Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
+                    Date: ${receipt.date}<br>
+                    Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
+                    Total: ₹${total.toFixed(2)}<br>
+                    <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
+                    <hr>
+                </div>`;
+            }).join('');
+        }
+
+        function showHistory() {
+            loadHistory();
+            document.getElementById('history-page').style.display = 'block';
             document.getElementById('customer-info-page').style.display = 'none';
             document.getElementById('item-entry-page').style.display = 'none';
+        }
+
+        function showDeleteOption(index) {
+            const deleteButton = document.getElementById(`delete-${index}`);
+            deleteButton.style.display = 'block';
+            setTimeout(() => {
+                deleteButton.style.display = 'none';
+            }, 3000);
+        }
+
+        function confirmDelete(index) {
+            if (confirm("Are you sure you want to delete this receipt?")) {
+                deleteReceipt(index);
+            }
+        }
+
+        function deleteReceipt(index) {
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            receipts.splice(index, 1);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            loadHistory();
+        }
+
+        function exportToCSV() {
+    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Shop Name,Owner,Receipt Number,Customer Name,Customer Phone,Total,Date\n"; // Moved Date to the end
+
+    let grandTotal = 0;
+
+    receipts.forEach((receipt, index) => {
+        const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+        grandTotal += total;
+        // Moved Date to the end of the row
+        csvContent += `${shopName},${ownerName},${index + 1},${receipt.customerName},${receipt.customerPhone},${total.toFixed(2)},${receipt.date}\n`;
+    });
+
+    csvContent += `,,,,Grand Total,${grandTotal.toFixed(2)}\n`; // Adjusted position to match the columns
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "sales_history.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+        function confirmLogout() {
+            if (confirm("Are you sure you want to logout?")) {
+                logout();
+            }
+        }
+
+        function logout() {
+            document.getElementById('customer-info-page').style.display = 'none';
+            document.getElementById('item-entry-page').style.display = 'none';
+            document.getElementById('history-page').style.display = 'none';
             document.getElementById('login-page').style.display = 'block';
+        }
+
+        function goBack() {
+            document.getElementById('history-page').style.display = 'none';
+            document.getElementById('customer-info-page').style.display = 'block';
         }
     </script>
 
