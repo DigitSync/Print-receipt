@@ -377,22 +377,25 @@
         }
 
         function loadHistory() {
-            const historyContainer = document.getElementById('history');
-            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-            historyContainer.innerHTML = receipts.map((receipt, index) => {
-                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
-                return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
-                    <strong>Receipt #${index + 1}</strong><br>
-                    Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
-                    Date: ${receipt.date}<br>
-                    Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
-                    Total: ₹${total.toFixed(2)}<br>
-                    <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
-                    <hr>
-                </div>`;
-            }).join('');
-        }
+    const historyContainer = document.getElementById('history');
+    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+    receipts.reverse(); // Reverse the order of receipts to show the latest first
 
+    historyContainer.innerHTML = receipts.map((receipt, index) => {
+        const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+        // Calculate the correct receipt number after reversing
+        const receiptNumber = receipts.length - index;
+        return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
+            <strong>Receipt #${receiptNumber}</strong><br>
+            Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
+            Date: ${receipt.date}<br>
+            Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
+            Total: ₹${total.toFixed(2)}<br>
+            <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
+            <hr>
+        </div>`;
+    }).join('');
+}
         function showHistory() {
             loadHistory();
             document.getElementById('history-page').style.display = 'block';
