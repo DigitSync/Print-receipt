@@ -418,11 +418,13 @@
         }
 
         function deleteReceipt(index) {
-            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-            receipts.splice(index, 1);
-            localStorage.setItem('receipts', JSON.stringify(receipts));
-            loadHistory();
-        }
+    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+    // Calculate the correct index to delete after reversing the order
+    const correctIndex = receipts.length - 1 - index;
+    receipts.splice(correctIndex, 1);
+    localStorage.setItem('receipts', JSON.stringify(receipts));
+    loadHistory();
+}
 
         function exportToCSV() {
     let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
