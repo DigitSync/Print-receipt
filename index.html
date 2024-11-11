@@ -18,7 +18,7 @@
             max-width: 400px;
             display: none;
         }
-        input {
+        input, select {
             display: block;
             margin: 10px auto;
             padding: 10px;
@@ -142,6 +142,9 @@
 
     <div id="item-entry-page" class="page">
         <h2>Enter Item Details</h2>
+        <select id="existing-items" onchange="selectExistingItem()">
+            <option value="">Choose Existing Item</option>
+        </select>
         <input type="text" id="item-name" placeholder="Item Name" required>
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
         <button onclick="addItem()">Add Item</button>
@@ -186,6 +189,8 @@
             } else {
                 document.getElementById('login-page').style.display = 'block';
             }
+
+            loadItems(); // Load existing items from localStorage
         }
 
         function applyShopDetails(index, shops) {
@@ -248,17 +253,52 @@
             document.getElementById('item-entry-page').style.display = 'block';
         }
 
+        function loadItems() {
+            let itemsList = JSON.parse(localStorage.getItem('itemsList')) || [];
+            const itemSelect = document.getElementById('existing-items');
+            itemSelect.innerHTML = '<option value="">Choose Existing Item</option>';
+            itemsList.forEach(item => {
+                let option = document.createElement('option');
+                option.value = item.name;
+                option.text = `${item.name} - ₹${item.price.toFixed(2)}`;
+                itemSelect.add(option);
+            });
+        }
+
         function addItem() {
             const itemName = document.getElementById('item-name').value;
             const itemPrice = parseFloat(document.getElementById('item-price').value);
             
             if (itemName && !isNaN(itemPrice)) {
                 items.push({ name: itemName, price: itemPrice });
+                saveItem(itemName, itemPrice); // Save item to localStorage
                 document.getElementById('item-name').value = '';
                 document.getElementById('item-price').value = '';
                 updateReceipt();
+                loadItems(); // Refresh the items list
             } else {
                 alert("Please enter valid item name and price.");
+            }
+        }
+
+        function saveItem(name, price) {
+            let itemsList = JSON.parse(localStorage.getItem('itemsList')) || [];
+            // Check if item already exists
+            if (!itemsList.some(item => item.name === name)) {
+                itemsList.push({ name, price });
+                localStorage.setItem('itemsList', JSON.stringify(itemsList));
+            }
+        }
+
+        function selectExistingItem() {
+            const selectedOption = document.getElementById('existing-items').value;
+            if (selectedOption) {
+                const itemsList = JSON.parse(localStorage.getItem('itemsList')) || [];
+                const selectedItem = itemsList.find(item => item.name === selectedOption);
+                if (selectedItem) {
+                    document.getElementById('item-name').value = selectedItem.name;
+                    document.getElementById('item-price').value = selectedItem.price;
+                }
             }
         }
 
@@ -377,25 +417,26 @@
         }
 
         function loadHistory() {
-    const historyContainer = document.getElementById('history');
-    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-    receipts.reverse(); // Reverse the order of receipts to show the latest first
+            const historyContainer = document.getElementById('history');
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            receipts.reverse(); // Reverse the order of receipts to show the latest first
 
-    historyContainer.innerHTML = receipts.map((receipt, index) => {
-        const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
-        // Calculate the correct receipt number after reversing
-        const receiptNumber = receipts.length - index;
-        return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
-            <strong>Receipt #${receiptNumber}</strong><br>
-            Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
-            Date: ${receipt.date}<br>
-            Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
-            Total: ₹${total.toFixed(2)}<br>
-            <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
-            <hr>
-        </div>`;
-    }).join('');
-}
+            historyContainer.innerHTML = receipts.map((receipt, index) => {
+                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+                // Calculate the correct receipt number after reversing
+                const receiptNumber = receipts.length - index;
+                return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
+                    <strong>Receipt #${receiptNumber}</strong><br>
+                    Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
+                    Date: ${receipt.date}<br>
+                    Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
+                    Total: ₹${total.toFixed(2)}<br>
+                    <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
+                    <hr>
+                </div>`;
+            }).join('');
+        }
+
         function showHistory() {
             loadHistory();
             document.getElementById('history-page').style.display = 'block';
@@ -418,38 +459,38 @@
         }
 
         function deleteReceipt(index) {
-    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-    // Calculate the correct index to delete after reversing the order
-    const correctIndex = receipts.length - 1 - index;
-    receipts.splice(correctIndex, 1);
-    localStorage.setItem('receipts', JSON.stringify(receipts));
-    loadHistory();
-}
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            // Calculate the correct index to delete after reversing the order
+            const correctIndex = receipts.length - 1 - index;
+            receipts.splice(correctIndex, 1);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            loadHistory();
+        }
 
         function exportToCSV() {
-    let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Shop Name,Owner,Receipt Number,Customer Name,Customer Phone,Total,Date\n"; // Moved Date to the end
+            let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Shop Name,Owner,Receipt Number,Customer Name,Customer Phone,Total,Date\n"; // Moved Date to the end
 
-    let grandTotal = 0;
+            let grandTotal = 0;
 
-    receipts.forEach((receipt, index) => {
-        const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
-        grandTotal += total;
-        // Moved Date to the end of the row
-        csvContent += `${shopName},${ownerName},${index + 1},${receipt.customerName},${receipt.customerPhone},${total.toFixed(2)},${receipt.date}\n`;
-    });
+            receipts.forEach((receipt, index) => {
+                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+                grandTotal += total;
+                // Moved Date to the end of the row
+                csvContent += `${shopName},${ownerName},${index + 1},${receipt.customerName},${receipt.customerPhone},${total.toFixed(2)},${receipt.date}\n`;
+            });
 
-    csvContent += `,,,,Grand Total,${grandTotal.toFixed(2)}\n`; // Adjusted position to match the columns
+            csvContent += `,,,,Grand Total,${grandTotal.toFixed(2)}\n`; // Adjusted position to match the columns
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "sales_history.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "sales_history.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
         function confirmLogout() {
             if (confirm("Are you sure you want to logout?")) {
