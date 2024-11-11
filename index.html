@@ -38,6 +38,15 @@
         button:hover {
             background-color: #218838;
         }
+        #add-item-button {
+            background-color: #ff6600;
+            font-size: 18px;
+            padding: 12px;
+            width: 85%; /* Make it larger in width */
+        }
+        #add-item-button:hover {
+            background-color: #e65c00;
+        }
         #reset-button {
             background-color: #dc3545;
             color: white;
@@ -47,6 +56,7 @@
             cursor: pointer;
             margin: 5px 0;
             font-size: 14px;
+            width: 85%; /* Make it larger in width */
         }
         #logout-button {
             font-size: 12px;
@@ -147,9 +157,15 @@
         </select>
         <input type="text" id="item-name" placeholder="Item Name" required>
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
-        <button onclick="addItem()">Add Item</button>
-        <button onclick="printReceipt()">Print Receipt</button>
-        <button onclick="shareReceipt()">Share Receipt</button>
+
+        <!-- Buttons arranged in specified order -->
+        <button id="add-item-button" onclick="addItem()">Add Item</button>
+        
+        <div>
+            <button onclick="printReceipt()">Print Receipt</button>
+            <button onclick="shareReceipt()">Share Receipt</button>
+        </div>
+
         <button id="reset-button" onclick="resetItems()">Reset for New Sale</button>
 
         <h2>Receipt:</h2>
