@@ -42,7 +42,7 @@
             background-color: #ff6600;
             font-size: 18px;
             padding: 12px;
-            width: 85%; /* Make it larger in width */
+            width: 85%;
         }
         #add-item-button:hover {
             background-color: #e65c00;
@@ -56,7 +56,7 @@
             cursor: pointer;
             margin: 5px 0;
             font-size: 14px;
-            width: 85%; /* Make it larger in width */
+            width: 85%;
         }
         #logout-button {
             font-size: 12px;
@@ -173,10 +173,11 @@
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
 
         <!-- Buttons arranged in specified order -->
-        <button id="add-item-button" onclick="addItem()">Add Item</button>
-        
         <div>
+            <button id="add-item-button" onclick="addItem()">Add Item</button>
+           
             <button onclick="printReceipt()">Print Receipt</button>
+<button onclick="notifyWhatsApp()">WhatsApp Alert</button>
             <button onclick="shareReceipt()">Share Receipt</button>
         </div>
 
@@ -422,6 +423,28 @@
                 });
             });
         }
+
+        function notifyWhatsApp() {
+    const currentDateTime = new Date().toLocaleString();
+    const total = items.reduce((sum, item) => sum + item.price, 0);
+    const gst = total * 0.1;
+    const discount = gst;
+    const finalTotal = total + gst - discount;
+
+    const barcodeElement = document.getElementById('barcode');
+    const barcodeNumber = barcodeElement ? barcodeElement.textContent : '';
+
+    const message = `Hi *${customerName}*,\n\nDetails of your Sale Invoice from *${shopName}*!\n\nReceipt Details:\n- Date & Time: ${currentDateTime}\n- Items: ${items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}\n- Subtotal: ₹${total.toFixed(2)}\n- GST (10%): ₹${gst.toFixed(2)}\n- Discount: ₹${discount.toFixed(2)}\n- Total: *₹${finalTotal.toFixed(2)}*\n\nShop Info:\n- Address: ${address}\n- Contact: ${contactNumber}\n- Barcode: ${barcodeNumber}\n\n_Visit us at our website: https://thedigitsync.blogspot.com/2024/11/free-custom-receipt-generator.html_\n\nThank you!`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    // Ensure the phone number is correctly formatted
+    const formattedPhone = `91${customerPhone.replace(/^0+/, '')}`;
+
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+
+    window.open(whatsappUrl, '_blank');
+}
 
         function resetItems() {
             saveReceipt();
