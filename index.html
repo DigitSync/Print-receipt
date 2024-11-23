@@ -9,14 +9,22 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f0f8ff;
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            background-color: #f0f8ff;
+            color: #000;
+        }
+        .dark-mode {
+            background-color: #2c2c2c;
+            color: #f0f8ff;
         }
         .page {
             margin: 20px auto;
             max-width: 400px;
             display: none;
+            position: relative;
+            min-height: 100vh; /* Ensure it takes at least full viewport height */
         }
         input, select {
             display: block;
@@ -24,6 +32,8 @@
             padding: 10px;
             width: 80%;
             font-size: 16px;
+            background-color: inherit;
+            color: inherit;
         }
         button {
             padding: 10px;
@@ -47,6 +57,19 @@
         #add-item-button:hover {
             background-color: #e65c00;
         }
+        #add-new-sale-button {
+            background-color: #ffcc00;
+            font-size: 20px;
+            padding: 15px;
+            width: 90%;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #add-new-sale-button:hover {
+            background-color: #ffb700;
+        }
         #reset-button {
             background-color: #dc3545;
             color: white;
@@ -58,10 +81,14 @@
             font-size: 14px;
             width: 85%;
         }
-        #logout-button {
+        #settings-button {
             font-size: 12px;
             background-color: #dc3545;
             margin-top: 20px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
         #receipt {
             text-align: left;
@@ -77,6 +104,8 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            background-color: inherit;
+            color: inherit;
         }
         th {
             background-color: #007bff;
@@ -89,6 +118,25 @@
         #shop-title {
             font-size: 28px;
             margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+            color: white;
+            background-color: #007bff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .toggle-card-button {
+            position: absolute;
+            top: -5px;
+            right: -35px;
+            width: 20px;
+            height: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
         }
         .barcode {
             margin-top: 20px;
@@ -96,8 +144,67 @@
         }
         .compact-info {
             font-size: 12px;
-            color: #555;
+            color: inherit;
             margin-top: 10px;
+        }
+        .business-card {
+            width: 336px;
+            height: 210px; 
+            border: 1px solid #ccc;
+            margin: 20px auto;
+            display: block;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, #007bff 70%, #ffffff 30%);
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .business-card h2 {
+            font-family: 'Georgia', serif;
+            text-align: left;
+            margin: 0;
+        }
+        .business-card p {
+            margin: 5px 0;
+            font-size: 14px;
+            text-align: left;
+            color: #fafafa;
+        }
+        #card-qr-code {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 90px; 
+            height: 90px;
+        }
+        #card-qr-code canvas {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+        .decorative-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px; 
+            background: linear-gradient(to right, #ffffff, #007bff);
+        }
+        .website-footer {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #fafafa;
+        }
+        .business-card-page {
+            display: none;
         }
         @media print {
             body {
@@ -122,9 +229,72 @@
                 border: 1px solid #333;
             }
         }
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-top: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Add "ON" and "OFF" labels */
+        .slider:after {
+            content: 'OFF';
+            color: white;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 70%;
+            font-size: 12px;
+        }
+
+        input:checked + .slider:after {
+            content: 'ON';
+            left: 30%;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body onload="loadShopDetails()">
 
@@ -142,27 +312,23 @@
     </div>
 
     <div id="customer-info-page" class="page">
-    <h1 id="shop-title"></h1>
-    <input type="text" id="customer-name" placeholder="Customer Name" required>
-    <input type="text" id="customer-phone" placeholder="Customer Phone Number" required>
-    <button onclick="submitCustomerInfo()">Submit Customer Info</button>
-    <button onclick="showHistory()">View Sales History</button><br>
-    <button id="logout-button" onclick="confirmLogout()">Logout</button>
-
-    <!-- Features Section -->
-    <div id="features">
-        <h2 style="font-size: 14px;">Receipt Generator Features</h2>
-<ul style="font-size: 12px;">
-    <li><strong>Instant Receipt Creation:</strong> Quickly create receipts with barcodes for easy scanning.</li>
-    <li><strong>Easy Item Management:</strong> Add items fast to make sales smoother.</li>
-    <li><strong>Flexible Printing & Sharing:</strong> Print receipts on any printer, including thermal and standard, and easily share via WhatsApp and other platforms.</li>
-    <li><strong>Sales History Tracking:</strong> Keep records and export transactions to CSV or Excel.</li>
-    <li><strong>Multi-Shop Management:</strong> Manage multiple shops from one place.</li>
-    <li><strong>User-Friendly Interface:</strong> Simple enough for everyone to use.</li>
-</ul>
-<p style="font-size: 12px;">Improve efficiency and customer service effortlessly with our Receipt Generator! Visit us at <a href="https://thedigitsync.blogspot.com/">thedigitsync.blogspot.com</a>.</p>
+        <h1 id="shop-title">Shop Title 
+            <button class="toggle-card-button" onclick="showBusinessCardPage()">+</button>
+        </h1>
+        <input type="text" id="customer-name" placeholder="Customer Name" required>
+        <input type="text" id="customer-phone" placeholder="Customer Phone Number" required>
+        <button id="add-new-sale-button" onclick="submitCustomerInfo()">Add New Sale</button>
+        <div style="margin-top: 10px;">
+            <button onclick="showHistory()">View Sales History</button>
+            <button onclick="showBusinessCardPage()">Business Card</button>
+        </div>
+        <label class="switch">
+            <input type="checkbox" onclick="toggleDarkMode()">
+            <span class="slider"></span>
+        </label>
+        <div style="margin-top: 5px;">Dark Mode</div>
+        <button id="settings-button" onclick="showSettings()">Settings</button>
     </div>
-</div>
 
     <div id="item-entry-page" class="page">
         <h2>Enter Item Details</h2>
@@ -172,12 +338,10 @@
         <input type="text" id="item-name" placeholder="Item Name" required>
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
 
-        <!-- Buttons arranged in specified order -->
         <div>
             <button id="add-item-button" onclick="addItem()">Add Item</button>
-           
             <button onclick="printReceipt()">Print Receipt</button>
-<button onclick="notifyWhatsApp()">WhatsApp Alert</button>
+            <button onclick="notifyWhatsApp()">WhatsApp Alert</button>
             <button onclick="shareReceipt()">Share Receipt</button>
         </div>
 
@@ -192,6 +356,44 @@
         <div id="history"></div>
         <button onclick="exportToCSV()">Export to CSV</button>
         <button onclick="goBack()">Back</button>
+    </div>
+
+    <!-- Business Card Page -->
+    <div id="business-card-page" class="business-card-page page">
+        <div id="business-card" class="business-card">
+            <div id="card-qr-code"></div>
+            <h2 id="card-shop-name">Shop Name</h2>
+            <p id="card-owner-name">Owner Name</p>
+            <p id="card-phone-number">• 1234567890</p>
+            <p id="card-address">• Shop Address</p>
+            <div class="decorative-bar"></div>
+            <div class="website-footer">Visit us at <a href="https://thedigitsync.blogspot.com/" style="color: #fafafa;">thedigitsync.blogspot.com</a></div>
+        </div>
+        <button onclick="changeTheme()">Change Theme</button>
+        <button onclick="downloadBusinessCard()">Download Business Card</button>
+        <button onclick="goBack()">Back</button>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settings-page" class="page">
+        <h2>Settings</h2>
+        <input type="text" id="edit-shop-name" placeholder="Shop Name" required>
+        <input type="text" id="edit-contact-number" placeholder="Contact Number">
+        <input type="text" id="edit-address" placeholder="Address">
+        <input type="text" id="edit-owner-name" placeholder="Owner/Manager Name">
+        <button onclick="saveSettings()">Save</button>
+        <button onclick="logout()">Logout</button>
+        <h2 style="font-size: 14px;">Receipt Generator Features</h2>
+        <ul style="font-size: 12px;">
+            <li><strong>Instant Receipt Creation:</strong> Quickly create receipts with barcodes for easy scanning.</li>
+            <li><strong>Easy Item Management:</strong> Add items fast to make sales smoother.</li>
+            <li><strong>Flexible Printing & Sharing:</strong> Print receipts on any printer, including thermal and standard, and easily share via WhatsApp and other platforms.</li>
+            <li><strong>Sales History Tracking:</strong> Keep records and export transactions to CSV or Excel.</li>
+            <li><strong>Multi-Shop Management:</strong> Manage multiple shops from one place.</li>
+            <li><strong>User-Friendly Interface:</strong> Simple enough for everyone to use.</li>
+        </ul>
+        <p style="font-size: 12px;">Improve efficiency and customer service effortlessly with our Receipt Generator! Visit us at <a href="https://thedigitsync.blogspot.com/">thedigitsync.blogspot.com</a>.</p>
+        <p style="font-size: 12px;">Developed by Rouf</p>
     </div>
 
     <script>
@@ -220,19 +422,76 @@
             } else {
                 document.getElementById('login-page').style.display = 'block';
             }
-
-            loadItems(); // Load existing items from localStorage
+            
+            loadItems();
         }
 
         function applyShopDetails(index, shops) {
             shopName = shops[index].shopName;
             contactNumber = shops[index].contactNumber;
-            address = shops[index].address;
+            address = formatAddress(shops[index].address);
             ownerName = shops[index].ownerName;
 
             document.getElementById('shop-title').innerText = shopName;
             document.getElementById('customer-info-page').style.display = 'block';
             document.getElementById('login-page').style.display = 'none';
+
+            document.getElementById('card-shop-name').innerText = shopName;
+            document.getElementById('card-owner-name').innerText = ownerName;
+            document.getElementById('card-phone-number').innerText = `• ${contactNumber}`;
+            document.getElementById('card-address').innerText = `• ${address}`;
+        }
+
+        function formatAddress(address) {
+            return address.split(' ').reduce((acc, word, index) => {
+                return acc + ((index % 3 == 0 && index !== 0) ? '\n' : ' ') + word;
+            }, '').trim();
+        }
+
+        function generateQRCode() {
+            const qrData = `BEGIN:VCARD
+VERSION:3.0
+FN:${shopName}
+TEL:${contactNumber}
+END:VCARD`;
+
+            document.getElementById("card-qr-code").innerHTML = ""; // Clear previous QR code
+            new QRCode(document.getElementById("card-qr-code"), {
+                text: qrData,
+                width: 90,
+                height: 90,
+                colorDark: "#000000",
+                colorLight: "#ffffff"
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function downloadBusinessCard() {
+            html2canvas(document.querySelector('#business-card'), {
+                scale: 4,
+                backgroundColor: null
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL("image/jpeg", 1.0);
+                link.download = 'business-card.jpg';
+                link.click();
+            });
+        }
+
+        function showBusinessCardPage() {
+            document.getElementById('customer-info-page').style.display = 'none';
+            document.getElementById('business-card-page').style.display = 'block';
+            generateQRCode(); // Ensure QR code is generated when page is shown
+        }
+
+        function changeTheme() {
+            const card = document.getElementById('business-card');
+            const randomColor1 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+            const randomColor2 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+            card.style.background = `linear-gradient(to right, ${randomColor1} 70%, ${randomColor2} 30%)`;
         }
 
         function selectShop() {
@@ -302,11 +561,11 @@
             
             if (itemName && !isNaN(itemPrice)) {
                 items.push({ name: itemName, price: itemPrice });
-                saveItem(itemName, itemPrice); // Save item to localStorage
+                saveItem(itemName, itemPrice);
                 document.getElementById('item-name').value = '';
                 document.getElementById('item-price').value = '';
                 updateReceipt();
-                loadItems(); // Refresh the items list
+                loadItems();
             } else {
                 alert("Please enter valid item name and price.");
             }
@@ -314,7 +573,6 @@
 
         function saveItem(name, price) {
             let itemsList = JSON.parse(localStorage.getItem('itemsList')) || [];
-            // Check if item already exists
             if (!itemsList.some(item => item.name === name)) {
                 itemsList.push({ name, price });
                 localStorage.setItem('itemsList', JSON.stringify(itemsList));
@@ -425,26 +683,25 @@
         }
 
         function notifyWhatsApp() {
-    const currentDateTime = new Date().toLocaleString();
-    const total = items.reduce((sum, item) => sum + item.price, 0);
-    const gst = total * 0.1;
-    const discount = gst;
-    const finalTotal = total + gst - discount;
+            const currentDateTime = new Date().toLocaleString();
+            const total = items.reduce((sum, item) => sum + item.price, 0);
+            const gst = total * 0.1;
+            const discount = gst;
+            const finalTotal = total + gst - discount;
 
-    const barcodeElement = document.getElementById('barcode');
-    const barcodeNumber = barcodeElement ? barcodeElement.textContent : '';
+            const barcodeElement = document.getElementById('barcode');
+            const barcodeNumber = barcodeElement ? barcodeElement.textContent : '';
 
-    const message = `Hi *${customerName}*,\n\nDetails of your Sale Invoice from *${shopName}*!\n\nReceipt Details:\n- Date & Time: ${currentDateTime}\n- Items: ${items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}\n- Subtotal: ₹${total.toFixed(2)}\n- GST (10%): ₹${gst.toFixed(2)}\n- Discount: ₹${discount.toFixed(2)}\n- Total: *₹${finalTotal.toFixed(2)}*\n\nShop Info:\n- Address: ${address}\n- Contact: ${contactNumber}\n- Barcode: ${barcodeNumber}\n\n_Visit us at our website: https://thedigitsync.blogspot.com/2024/11/free-custom-receipt-generator.html_\n\nThank you!`;
+            const message = `Hi *${customerName}*,\n\nDetails of your Sale Invoice from *${shopName}*!\n\nReceipt Details:\n- Date & Time: ${currentDateTime}\n- Items: ${items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}\n- Subtotal: ₹${total.toFixed(2)}\n- GST (10%): ₹${gst.toFixed(2)}\n- Discount: ₹${discount.toFixed(2)}\n- Total: *₹${finalTotal.toFixed(2)}*\n\nShop Info:\n- Address: ${address}\n- Contact: ${contactNumber}\n- Barcode: ${barcodeNumber}\n\n_Visit us at our website: https://thedigitsync.blogspot.com/2024/11/free-custom-receipt-generator.html_\n\nThank you!`;
 
-    const encodedMessage = encodeURIComponent(message);
+            const encodedMessage = encodeURIComponent(message);
 
-    // Ensure the phone number is correctly formatted
-    const formattedPhone = `91${customerPhone.replace(/^0+/, '')}`;
+            const formattedPhone = `91${customerPhone.replace(/^0+/, '')}`;
 
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+            const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
 
-    window.open(whatsappUrl, '_blank');
-}
+            window.open(whatsappUrl, '_blank');
+        }
 
         function resetItems() {
             saveReceipt();
@@ -472,11 +729,10 @@
         function loadHistory() {
             const historyContainer = document.getElementById('history');
             let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-            receipts.reverse(); // Reverse the order of receipts to show the latest first
+            receipts.reverse();
 
             historyContainer.innerHTML = receipts.map((receipt, index) => {
                 const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
-                // Calculate the correct receipt number after reversing
                 const receiptNumber = receipts.length - index;
                 return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
                     <strong>Receipt #${receiptNumber}</strong><br>
@@ -513,7 +769,6 @@
 
         function deleteReceipt(index) {
             let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
-            // Calculate the correct index to delete after reversing the order
             const correctIndex = receipts.length - 1 - index;
             receipts.splice(correctIndex, 1);
             localStorage.setItem('receipts', JSON.stringify(receipts));
@@ -523,18 +778,17 @@
         function exportToCSV() {
             let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Shop Name,Owner,Receipt Number,Customer Name,Customer Phone,Total,Date\n"; // Moved Date to the end
+            csvContent += "Shop Name,Owner,Receipt Number,Customer Name,Customer Phone,Total,Date\n";
 
             let grandTotal = 0;
 
             receipts.forEach((receipt, index) => {
                 const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
                 grandTotal += total;
-                // Moved Date to the end of the row
                 csvContent += `${shopName},${ownerName},${index + 1},${receipt.customerName},${receipt.customerPhone},${total.toFixed(2)},${receipt.date}\n`;
             });
 
-            csvContent += `,,,,Grand Total,${grandTotal.toFixed(2)}\n`; // Adjusted position to match the columns
+            csvContent += `,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -545,21 +799,46 @@
             document.body.removeChild(link);
         }
 
-        function confirmLogout() {
-            if (confirm("Are you sure you want to logout?")) {
-                logout();
+        function showSettings() {
+            document.getElementById('customer-info-page').style.display = 'none';
+            document.getElementById('settings-page').style.display = 'block';
+
+            document.getElementById('edit-shop-name').value = shopName;
+            document.getElementById('edit-contact-number').value = contactNumber;
+            document.getElementById('edit-address').value = address;
+            document.getElementById('edit-owner-name').value = ownerName;
+        }
+
+        function saveSettings() {
+            shopName = document.getElementById('edit-shop-name').value;
+            contactNumber = document.getElementById('edit-contact-number').value;
+            address = document.getElementById('edit-address').value;
+            ownerName = document.getElementById('edit-owner-name').value;
+
+            if (!shopName) {
+                alert("Shop Name is required!");
+                return;
             }
+
+            let shops = JSON.parse(localStorage.getItem('shops')) || [];
+            const currentShopIndex = localStorage.getItem('currentShopIndex');
+            shops[currentShopIndex] = { shopName, contactNumber, address, ownerName };
+            localStorage.setItem('shops', JSON.stringify(shops));
+
+            applyShopDetails(currentShopIndex, shops);
+            goBack();
         }
 
         function logout() {
             document.getElementById('customer-info-page').style.display = 'none';
             document.getElementById('item-entry-page').style.display = 'none';
             document.getElementById('history-page').style.display = 'none';
+            document.getElementById('settings-page').style.display = 'none';
             document.getElementById('login-page').style.display = 'block';
         }
 
         function goBack() {
-            document.getElementById('history-page').style.display = 'none';
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
             document.getElementById('customer-info-page').style.display = 'block';
         }
     </script>
