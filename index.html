@@ -336,6 +336,13 @@
         </select>
         <input type="text" id="item-name" placeholder="Item Name" required>
         <input type="number" id="item-price" placeholder="Item Price (in ₹)" required>
+        
+        <!-- Quantity Selector -->
+        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+            <button id="decrease-quantity" onclick="changeQuantity(-1)" style="width: 30px; height: 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">-</button>
+            <input type="number" id="item-quantity" value="1" min="1" readonly style="width: 50px; text-align: center; margin: 0 10px; background-color: #f0f8ff; border: none;">
+            <button id="increase-quantity" onclick="changeQuantity(1)" style="width: 30px; height: 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">+</button>
+        </div>
 
         <div>
             <button id="add-item-button" onclick="addItem()">Add Item</button>
@@ -557,16 +564,18 @@ END:VCARD`;
         function addItem() {
             const itemName = document.getElementById('item-name').value;
             const itemPrice = parseFloat(document.getElementById('item-price').value);
-            
-            if (itemName && !isNaN(itemPrice)) {
-                items.push({ name: itemName, price: itemPrice });
+            const itemQuantity = parseInt(document.getElementById('item-quantity').value);
+
+            if (itemName && !isNaN(itemPrice) && !isNaN(itemQuantity)) {
+                items.push({ name: itemName, price: itemPrice, quantity: itemQuantity });
                 saveItem(itemName, itemPrice);
                 document.getElementById('item-name').value = '';
                 document.getElementById('item-price').value = '';
+                document.getElementById('item-quantity').value = '1';
                 updateReceipt();
                 loadItems();
             } else {
-                alert("Please enter valid item name and price.");
+                alert("Please enter valid item name, price, and quantity.");
             }
         }
 
@@ -590,20 +599,34 @@ END:VCARD`;
             }
         }
 
+        function changeQuantity(amount) {
+            const quantityInput = document.getElementById('item-quantity');
+            let currentQuantity = parseInt(quantityInput.value, 10);
+
+            currentQuantity += amount;
+
+            if (currentQuantity < 1) {
+                currentQuantity = 1; // Ensure quantity does not go below 1
+            }
+
+            quantityInput.value = currentQuantity;
+        }
+
         function updateReceipt() {
-    const currentDateTime = new Date().toLocaleString();
-    let receiptContent = `<div style="text-align: center; font-family: 'Impact', sans-serif; font-size: 30px; color: red; margin-bottom: 5px;">${shopName}</div>`;
+            const currentDateTime = new Date().toLocaleString();
+            let receiptContent = `<div style="text-align: center; font-family: 'Impact', sans-serif; font-size: 30px; font-weight: bold; color: red; margin-bottom: 5px;"><strong>${shopName}</strong></div>`;
             receiptContent += `<div style="text-align: center; padding: 10px 0; margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold;"><strong>CASH RECEIPT</strong></div>`;
             receiptContent += `<div style="text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 12px;"><em>Invoice</em></div><br>`;
             receiptContent += `Customer: <strong>${customerName}</strong><br>`;
             receiptContent += `Mobile: <strong>${customerPhone}</strong><br>`;
             receiptContent += `Date & Time: ${currentDateTime}<br><br>`;
-            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Price (₹)</th></tr>`;
+            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th></tr>`;
             let total = 0; 
 
             items.forEach(item => {
-                receiptContent += `<tr><td>${item.name}</td><td>₹${item.price.toFixed(2)}</td></tr>`;
-                total += item.price;
+                const itemTotal = item.price * item.quantity;
+                receiptContent += `<tr><td>${item.name}</td><td>${item.quantity}</td><td>₹${item.price.toFixed(2)}</td><td>₹${itemTotal.toFixed(2)}</td></tr>`;
+                total += itemTotal;
             }); 
 
             const gst = total * 0.18;
@@ -677,7 +700,6 @@ END:VCARD`;
             }
         }
 
-
         function generateBarcode() {
             const currentTime = new Date();
             const timeString = currentTime.toLocaleTimeString('it-IT').replace(/:/g, '').slice(0, 6);
@@ -710,7 +732,8 @@ END:VCARD`;
 
         function shareReceipt() {
             html2canvas(document.getElementById('receipt'), { 
-                scale: 2,
+            width: 330,
+                scale: 4,
                 backgroundColor: '#ffffff',
                 useCORS: true,
                 onclone: (doc) => {
@@ -737,7 +760,7 @@ END:VCARD`;
 
         function notifyWhatsApp() {
             const currentDateTime = new Date().toLocaleString();
-            const total = items.reduce((sum, item) => sum + item.price, 0);
+            const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
             const gst = total * 0.18;
             const discount = gst;
             const finalTotal = total + gst - discount;
@@ -745,14 +768,11 @@ END:VCARD`;
             const barcodeElement = document.getElementById('barcode');
             const barcodeNumber = barcodeElement ? barcodeElement.textContent : '';
 
-            const message = `Hi *${customerName}*,\n\nDetails of your Sale Invoice from *${shopName}*!\n\nReceipt Details:\n- Date & Time: ${currentDateTime}\n- Items: ${items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}\n- Subtotal: ₹${total.toFixed(2)}\n- GST Charge: ₹${gst.toFixed(2)}\n- Discount: ₹${discount.toFixed(2)}\n- Total: *₹${finalTotal.toFixed(2)}*\n\nShop Info:\n- Address: ${address}\n- Contact: ${contactNumber}\n- Barcode: ${barcodeNumber}\n\n_Visit us at our website: https://thedigitsync.blogspot.com/2024/11/free-custom-receipt-generator.html_\n\nThank you!`;
+            const message = `Hi *${customerName}*,\n\nDetails of your Sale Invoice from *${shopName}*!\n\nReceipt Details:\n- Date & Time: ${currentDateTime}\n- Items: ${items.map(item => `${item.name} (${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}`).join(', ')}\n- Subtotal: ₹${total.toFixed(2)}\n- GST Charge: ₹${gst.toFixed(2)}\n- Discount: ₹${discount.toFixed(2)}\n- Total: *₹${finalTotal.toFixed(2)}*\n\nShop Info:\n- Address: ${address}\n- Contact: ${contactNumber}\n- Barcode: ${barcodeNumber}\n\n_Visit us at our website: https://thedigitsync.blogspot.com/2024/11/free-custom-receipt-generator.html_\n\nThank you!`;
 
             const encodedMessage = encodeURIComponent(message);
-
             const formattedPhone = `91${customerPhone.replace(/^0+/, '')}`;
-
             const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
-
             window.open(whatsappUrl, '_blank');
         }
 
@@ -762,6 +782,7 @@ END:VCARD`;
             document.getElementById('receipt').innerHTML = '';
             document.getElementById('item-name').value = '';
             document.getElementById('item-price').value = '';
+            document.getElementById('item-quantity').value = '1';
             document.getElementById('customer-info-page').style.display = 'block';
             document.getElementById('item-entry-page').style.display = 'none';
         }
@@ -785,13 +806,13 @@ END:VCARD`;
             receipts.reverse();
 
             historyContainer.innerHTML = receipts.map((receipt, index) => {
-                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+                const total = receipt.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
                 const receiptNumber = receipts.length - index;
                 return `<div id="receipt-${index}" onmousedown="showDeleteOption(${index})" style="position: relative;">
                     <strong>Receipt #${receiptNumber}</strong><br>
                     Customer: ${receipt.customerName} (${receipt.customerPhone})<br>
                     Date: ${receipt.date}<br>
-                    Items: ${receipt.items.map(item => `${item.name} - ₹${item.price.toFixed(2)}`).join(', ')}<br>
+                    Items: ${receipt.items.map(item => `${item.name} (${item.quantity}) - ₹${(item.price * item.quantity).toFixed(2)}`).join(', ')}<br>
                     Total: ₹${total.toFixed(2)}<br>
                     <button id="delete-${index}" onclick="confirmDelete(${index})" style="display: none; position: absolute; right: 10px; top: 10px;">Delete</button>
                     <button onclick="downloadReceipt(${index})" style="position: absolute; right: 10px; top: 40px;">Download</button>
@@ -837,7 +858,7 @@ END:VCARD`;
             let grandTotal = 0;
 
             receipts.forEach((receipt, index) => {
-                const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+                const total = receipt.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
                 grandTotal += total;
                 csvContent += `${shopName},${ownerName},${index + 1},${receipt.customerName},${receipt.customerPhone},${total.toFixed(2)},${receipt.date}\n`;
             });
@@ -907,11 +928,12 @@ END:VCARD`;
             receiptContent += `Customer: <strong>${receipt.customerName}</strong><br>`;
             receiptContent += `Mobile: <strong>${receipt.customerPhone}</strong><br>`;
             receiptContent += `Date & Time: ${receipt.date}<br><br>`;
-            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Price (₹)</th></tr>`;
+            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Quantity</th><th>Price (₹)</th><th>Total (₹)</th></tr>`;
             receipt.items.forEach(item => {
-                receiptContent += `<tr><td>${item.name}</td><td>₹${item.price.toFixed(2)}</td></tr>`;
+                const itemTotal = item.price * item.quantity;
+                receiptContent += `<tr><td>${item.name}</td><td>${item.quantity}</td><td>₹${item.price.toFixed(2)}</td><td>₹${itemTotal.toFixed(2)}</td></tr>`;
             });
-            const total = receipt.items.reduce((sum, item) => sum + item.price, 0);
+            const total = receipt.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
             const gst = total * 0.18;
             const discount = gst;
             const finalTotal = total + gst - discount;
