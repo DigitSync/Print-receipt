@@ -235,11 +235,15 @@
         background-color: #007bff;
         color: white;
     }
-    /* Optional: Add styles for headers or footers if required */
-    .header, .footer {
-        text-align: center;
-        margin-bottom: 10px;
-        font-weight: bold;
+    /* Ensure specific texts are centered */
+    .centered-text {
+        text-align: center !important;
+    }
+    .left-aligned-text {
+        text-align: left !important;
+    }
+    .barcode, .website-footer, .thank-you-message {
+        text-align: center !important;
     }
 }
         /* Toggle Switch */
@@ -660,16 +664,16 @@ END:VCARD`;
     receiptContent += `<div class="left-aligned-text">Discount: ₹${discount.toFixed(2)}</div>`;
     receiptContent += `<div class="left-aligned-text"><strong>Total: ₹${finalTotal.toFixed(2)}</strong></div>`;
     receiptContent += `<div class="left-aligned-text" style="font-size: 12px;">Total Amount (in words): <strong>${convertNumberToWords(finalTotal)} Rupees</strong></div>`;
-    receiptContent += `<div class="centered-text" style="margin-top: 10px; font-weight: bold;">THANK YOU VISIT AGAIN!</div>`;
+    receiptContent += `<div class="centered-text thank-you-message" style="margin-top: 10px; font-weight: bold;">Thank You!</div>`;
     receiptContent += `<div class="barcode centered-text"><svg id="barcode"></svg></div>`;
     receiptContent += `<div class="left-aligned-text compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
-    receiptContent += `<div class="centered-text" style="font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`; 
+    receiptContent += `<div class="centered-text website-footer" style="font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`; 
 
     document.getElementById('receipt').innerHTML = receiptContent;
     document.getElementById('receipt').style.display = 'block'; 
 
     generateBarcode();
-} 
+}
 
         function convertNumberToWords(amount) {
             const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
@@ -740,17 +744,23 @@ END:VCARD`;
         }
 
         function printReceipt() {
-            const printWindow = window.open('', '', 'height=600,width=400');
-            printWindow.document.write('<html><head><title>Receipt</title><style>');
-            printWindow.document.write('body { font-family: Arial, sans-serif; margin: 0; padding: 20px; text-align: left; }');
-            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; }');
-            printWindow.document.write('th, td { border: 1px solid #333; padding: 8px; text-align: left; }');
-            printWindow.document.write('th { background-color: #007bff; color: white; }');
-            printWindow.document.write('</style></head><body>');
-            printWindow.document.write(document.getElementById('receipt').innerHTML);
-            printWindow.document.close();
-            printWindow.print();
-        }
+    const receiptContent = document.getElementById('receipt').innerHTML;
+    
+    const printWindow = window.open('', '', 'height=600,width=400');
+    printWindow.document.write('<html><head><title>Receipt</title><style>');
+    printWindow.document.write('body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }');
+    printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; }');
+    printWindow.document.write('th, td { border: 1px solid #333; padding: 8px; text-align: left; }');
+    printWindow.document.write('th { background-color: #007bff; color: white; }');
+    // Add styles for centered and left-aligned text
+    printWindow.document.write('.centered-text { text-align: center; }');
+    printWindow.document.write('.left-aligned-text { text-align: left; }');
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(receiptContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
 
         function shareReceipt() {
     const receiptElement = document.getElementById('receipt');
