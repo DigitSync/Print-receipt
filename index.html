@@ -89,7 +89,7 @@
             left: 50%;
             transform: translateX(-50%);
         }
-        #receipt {
+          {
             text-align: left;
             margin-top: 20px;
             display: none;
@@ -206,28 +206,42 @@
             display: none;
         }
         @media print {
-            body {
-                margin: 0;
-                padding: 20px;
-                font-size: 14px;
-                color: #333;
-            }
-            #receipt {
-                display: block;
-                margin: 0;
-            }
-            table {
-                border: none;
-            }
-            th {
-                border: 1px solid #333;
-                background-color: #007bff;
-                color: white;
-            }
-            td {
-                border: 1px solid #333;
-            }
-        }
+    body {
+        margin: 0;
+        padding: 20px;
+        font-size: 14px;
+        color: #333;
+        background-color: #fff; /* Ensure a white background for print */
+    }
+    #receipt {
+        display: block;
+        margin: 0 auto; /* Center the receipt on the page */
+        width: 100%; /* Use full width for the receipt */
+        max-width: 330px; /* Keep the receipt width manageable */
+        box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        overflow: hidden; /* Prevent content overflow */
+    }
+    table {
+        border-collapse: collapse; /* Merge table borders */
+        width: 100%; /* Use full width of the container */
+    }
+    th, td {
+        border: 1px solid #333;
+        padding: 8px; /* Add padding for readability */
+        text-align: left; /* Align text to the left */
+        vertical-align: top; /* Align content to the top for better readability */
+    }
+    th {
+        background-color: #007bff;
+        color: white;
+    }
+    /* Optional: Add styles for headers or footers if required */
+    .header, .footer {
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+}
         /* Toggle Switch */
         .switch {
             position: relative;
@@ -290,6 +304,13 @@
             content: 'ON';
             left: 30%;
         }
+.centered-text {
+    text-align: center;
+}
+
+.left-aligned-text {
+    text-align: left;
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -613,41 +634,42 @@ END:VCARD`;
         }
 
         function updateReceipt() {
-            const currentDateTime = new Date().toLocaleString();
-            let receiptContent = `<div style="text-align: center; font-family: 'Impact', sans-serif; font-size: 30px; font-weight: bold; color: red; margin-bottom: 5px;"><strong>${shopName}</strong></div>`;
-            receiptContent += `<div style="text-align: center; padding: 10px 0; margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold;"><strong>CASH RECEIPT</strong></div>`;
-            receiptContent += `<div style="text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 12px;"><em>Invoice</em></div><br>`;
-            receiptContent += `Customer: <strong>${customerName}</strong><br>`;
-            receiptContent += `Mobile: <strong>${customerPhone}</strong><br>`;
-            receiptContent += `Date & Time: ${currentDateTime}<br><br>`;
-            receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th></tr>`;
-            let total = 0; 
+    const currentDateTime = new Date().toLocaleString();
+    let receiptContent = `<div class="centered-text" style="font-family: 'Impact', sans-serif; font-size: 30px; font-weight: bold; color: red; margin-bottom: 5px;"><strong>${shopName}</strong></div>`;
+    receiptContent += `<div class="centered-text" style="padding: 10px 0; margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold;"><strong>CASH RECEIPT</strong></div>`;
+    receiptContent += `<div class="centered-text" style="font-family: 'Courier New', Courier, monospace; font-size: 12px;"><em>Invoice</em></div><br>`;
+    receiptContent += `<div class="left-aligned-text">Customer: <strong>${customerName}</strong></div>`;
+    receiptContent += `<div class="left-aligned-text">Mobile: <strong>${customerPhone}</strong></div>`;
+    receiptContent += `<div class="left-aligned-text">Date & Time: ${currentDateTime}</div><br>`;
+    receiptContent += `<table style="margin: 0 auto;"><tr><th>Item</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th></tr>`;
+    
+    let total = 0; 
+    items.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        receiptContent += `<tr><td>${item.name}</td><td>${item.quantity}</td><td>₹${item.price.toFixed(2)}</td><td>₹${itemTotal.toFixed(2)}</td></tr>`;
+        total += itemTotal;
+    }); 
 
-            items.forEach(item => {
-                const itemTotal = item.price * item.quantity;
-                receiptContent += `<tr><td>${item.name}</td><td>${item.quantity}</td><td>₹${item.price.toFixed(2)}</td><td>₹${itemTotal.toFixed(2)}</td></tr>`;
-                total += itemTotal;
-            }); 
+    const gst = total * 0.18;
+    const discount = gst;
+    const finalTotal = total + gst - discount; 
 
-            const gst = total * 0.18;
-            const discount = gst;
-            const finalTotal = total + gst - discount; 
+    receiptContent += `</table><hr>`;
+    receiptContent += `<div class="left-aligned-text">Subtotal: ₹${total.toFixed(2)}</div>`;
+    receiptContent += `<div class="left-aligned-text">GST Charge: ₹${gst.toFixed(2)}</div>`;
+    receiptContent += `<div class="left-aligned-text">Discount: ₹${discount.toFixed(2)}</div>`;
+    receiptContent += `<div class="left-aligned-text"><strong>Total: ₹${finalTotal.toFixed(2)}</strong></div>`;
+    receiptContent += `<div class="left-aligned-text" style="font-size: 12px;">Total Amount (in words): <strong>${convertNumberToWords(finalTotal)} Rupees</strong></div>`;
+    receiptContent += `<div class="centered-text" style="margin-top: 10px; font-weight: bold;">Thank You!</div>`;
+    receiptContent += `<div class="barcode centered-text"><svg id="barcode"></svg></div>`;
+    receiptContent += `<div class="left-aligned-text compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
+    receiptContent += `<div class="centered-text" style="font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`; 
 
-            receiptContent += `</table><hr>Subtotal: ₹${total.toFixed(2)}<br>`;
-            receiptContent += `GST Charge: ₹${gst.toFixed(2)}<br>`;
-            receiptContent += `Discount: ₹${discount.toFixed(2)}<br>`;
-            receiptContent += `<strong style="font-size: 18px; color: black;">Total: ₹${finalTotal.toFixed(2)}</strong><br>`;
-            receiptContent += `<div style="font-size: 12px;">Total Amount (in words): <strong>${convertNumberToWords(finalTotal)} Rupees</strong></div>`;
-            receiptContent += `<div style="margin-top: 10px; font-weight: bold; text-align: center;">Thank You!</div>`;
-            receiptContent += `<div class="barcode"><svg id="barcode"></svg></div>`;
-            receiptContent += `<div class="compact-info">${shopName}, ${address}<br>Contact: ${contactNumber}</div>`;
-            receiptContent += `<div style="text-align: center; font-size: 12px; margin-top: 10px;">Visit us at <strong>thedigitsync.blogspot.com</strong></div>`; 
+    document.getElementById('receipt').innerHTML = receiptContent;
+    document.getElementById('receipt').style.display = 'block'; 
 
-            document.getElementById('receipt').innerHTML = receiptContent;
-            document.getElementById('receipt').style.display = 'block'; 
-
-            generateBarcode();
-        } 
+    generateBarcode();
+} 
 
         function convertNumberToWords(amount) {
             const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
@@ -731,32 +753,34 @@ END:VCARD`;
         }
 
         function shareReceipt() {
-            html2canvas(document.getElementById('receipt'), { 
-            width: 330,
-                scale: 4,
-                backgroundColor: '#ffffff',
-                useCORS: true,
-                onclone: (doc) => {
-                    const receipt = doc.getElementById('receipt');
-                    receipt.style.padding = '20px';
-                    receipt.style.margin = '10px';
-                }
-            }).then(canvas => {
-                canvas.toBlob(blob => {
-                    const file = new File([blob], "receipt.png", { type: "image/png" });
-                    const shareData = {
-                        title: 'Receipt',
-                        text: 'Here is your receipt!',
-                        files: [file]
-                    };
-                    navigator.share(shareData).then(() => {
-                        console.log('Receipt shared successfully!');
-                    }).catch(err => {
-                        console.error('Error while sharing:', err);
-                    });
-                });
-            });
+    const receiptElement = document.getElementById('receipt');
+    html2canvas(receiptElement, { 
+        width: receiptElement.scrollWidth, // Capture the full width of the receipt
+        scale: 2, // Higher scale for better resolution
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        onclone: (doc) => {
+            const receipt = doc.getElementById('receipt');
+            receipt.style.padding = '20px'; // Add padding for better visuals
+            receipt.style.width = '100%'; // Ensure the receipt takes full width
+            receipt.style.boxSizing = 'border-box'; // Include padding in width calculation
         }
+    }).then(canvas => {
+        canvas.toBlob(blob => {
+            const file = new File([blob], "receipt.png", { type: "image/png" });
+            const shareData = {
+                title: 'Receipt',
+                text: 'Here is your receipt!',
+                files: [file]
+            };
+            navigator.share(shareData).then(() => {
+                console.log('Receipt shared successfully!');
+            }).catch(err => {
+                console.error('Error while sharing:', err);
+            });
+        });
+    });
+}
 
         function notifyWhatsApp() {
             const currentDateTime = new Date().toLocaleString();
