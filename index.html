@@ -561,7 +561,7 @@
 
                 const invoice = {
                     id: Date.now(),
-                    invNo: INV-${1001 + this.data.invoices.length},
+                    invNo: `INV-${1001 + this.data.invoices.length}`,
                     date: new Date().toLocaleDateString('en-IN'),
                     time: new Date().toLocaleTimeString(),
                     custName, custPhone, custGst,
@@ -647,7 +647,7 @@
 
                 // Fill Empty Rows for Paper Height
                 for(let i=0; i < 5; i++) {
-                    tbody.innerHTML += <tr class="h-6"><td colspan="5"></td></tr>;
+                    tbody.innerHTML += `<tr class="h-6"><td colspan="5"></td></tr>`;
                 }
 
                 document.getElementById('p-total').innerText = inv.grandTotal;
@@ -656,7 +656,7 @@
                 const element = document.getElementById('print-area');
                 html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = Bill_${inv.invNo}.jpg;
+                    link.download = `Bill_${inv.invNo}.jpg`;
                     link.href = canvas.toDataURL('image/jpeg');
                     link.click();
                 });
@@ -686,7 +686,7 @@
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
                 const link = document.createElement('a');
                 link.setAttribute("href", dataStr);
-                link.setAttribute("download", DigitMart_Backup_${new Date().toISOString().split('T')[0]}.json);
+                link.setAttribute("download", `DigitMart_Backup_${new Date().toISOString().split('T')[0]}.json`);
                 document.body.appendChild(link);
                 link.click();
             },
@@ -713,7 +713,7 @@
             exportCSV: function() {
                 let csv = "Inv No,Date,Customer,Phone,GST,Total,Mode\n";
                 this.data.invoices.forEach(i => {
-                    csv += ${i.invNo},${i.date},${i.custName},${i.custPhone},${i.custGst},${i.grandTotal},${i.mode}\n;
+                    csv += `${i.invNo},${i.date},${i.custName},${i.custPhone},${i.custGst},${i.grandTotal},${i.mode}\n`;
                 });
                 const link = document.createElement("a");
                 link.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
@@ -726,3 +726,5 @@
     </script>
 </body>
 </html>
+
+
